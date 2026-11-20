@@ -1,18 +1,10 @@
 {
   "name": "Dhaka Metro 3D — MRT Line-6",
   "short_name": "Dhaka Metro 3D",
-  "description": "৩ডি ঢাকা মেট্রো রেল (MRT Line-6) সিমুলেটর — উত্তরা উত্তর থেকে মতিঝিল",
   "start_url": "./index.html",
   "display": "fullscreen",
   "orientation": "landscape",
   "background_color": "#0b1320",
   "theme_color": "#006a4e",
-  "icons": [
-    {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
-  ]
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
 }

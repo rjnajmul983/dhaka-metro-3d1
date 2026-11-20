@@ -78,8 +78,6 @@ export function createStation(stationData) {
   });
 
   const length = 148;
-
-  // Main Platform + Entry Concourse Area (z from -29 to +119)
   const platform = new THREE.Mesh(new THREE.BoxGeometry(6.8, 1.4, length), concreteMat);
   platform.position.set(5.3, 0.7, 45);
   platform.receiveShadow = true;
@@ -89,7 +87,7 @@ export function createStation(stationData) {
   safetyLine.position.set(2.3, 1.42, 45);
   group.add(safetyLine);
 
-  // 3D Ticket Vending Machine (TVM) at Concourse Entry (x=7.7, z=-21)
+  // 3D Ticket Vending Machine
   const tvmMesh = new THREE.Mesh(
     new THREE.BoxGeometry(0.9, 2.2, 1.4),
     new THREE.MeshStandardMaterial({ map: sharedTvmTex, roughness: 0.4 })
@@ -97,7 +95,7 @@ export function createStation(stationData) {
   tvmMesh.position.set(7.7, 2.5, -21);
   group.add(tvmMesh);
 
-  // 3D AFC Smart Gates across platform at z = -14.5
+  // 3D AFC Smart Gates
   const afcMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.5, roughness: 0.4 });
   const gateLedMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
   const flapMat = new THREE.MeshStandardMaterial({ color: 0xf42a41, transparent: true, opacity: 0.75 });
@@ -107,27 +105,24 @@ export function createStation(stationData) {
     const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.15, 1.6), afcMat);
     pillar.position.set(gx, 1.98, -14.5);
     group.add(pillar);
-
     const led = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.08, 0.28), gateLedMat);
     led.position.set(gx, 2.58, -15.1);
     group.add(led);
   });
 
-  // Two animated gate flaps between pillars
   [4.1, 6.3].forEach((fx) => {
     const flap = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.85, 0.08), flapMat);
     flap.position.set(fx, 1.9, -14.5);
     group.add(flap);
-    gateFlaps.push({ mesh: flap, baseX: fx });
+    gateFlaps.push({ mesh: flap });
   });
 
-  // Animated Platform Screen Doors (PSD)
+  // Animated PSD
   const psdPanels = [];
   for (let z = -15; z <= 105; z += 10) {
     const fixedGlass = new THREE.Mesh(new THREE.BoxGeometry(0.12, 2.2, 6.2), glassMat);
     fixedGlass.position.set(2.02, 2.5, z);
     group.add(fixedGlass);
-
     const slideDoor = new THREE.Mesh(new THREE.BoxGeometry(0.1, 2.1, 3.6), glassMat);
     slideDoor.position.set(1.92, 2.45, z + 5);
     group.add(slideDoor);
@@ -139,7 +134,7 @@ export function createStation(stationData) {
   stopBoard.position.set(2.1, 3.2, -11);
   group.add(stopBoard);
 
-  // Station Canopy & Lights
+  // Canopy & Lights
   const roof = new THREE.Mesh(new THREE.BoxGeometry(16, 0.6, length + 6), darkRoofMat);
   roof.position.set(3.2, 7.6, 45);
   group.add(roof);
@@ -148,11 +143,9 @@ export function createStation(stationData) {
     const col = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 6.2, 8), concreteMat);
     col.position.set(7.8, 4.5, z);
     group.add(col);
-
     const led = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.12, 6), lightStripMat);
     led.position.set(4.8, 7.25, z);
     group.add(led);
-
     if (z > -10) {
       const bench = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.55, 3.6), benchMat);
       bench.position.set(6.8, 1.68, z + 6);
@@ -168,6 +161,7 @@ export function createStation(stationData) {
     group.add(sign);
   });
 
+  // Animated Commuters
   const npcs = [];
   const shirtColors = [0xef4444, 0x3b82f6, 0x10b981, 0xf59e0b, 0x8b5cf6, 0xec4899];
   for (let i = 0; i < 6; i++) {
@@ -202,9 +196,7 @@ export function createStation(stationData) {
       const gTarget = gateOpen ? 1 : 0;
       gateProgress += (gTarget - gateProgress) * Math.min(1, dt * 8);
       if (gateProgress > 0.005 || gTarget > 0) {
-        for (const f of gateFlaps) {
-          f.mesh.scale.x = Math.max(0.05, 1 - gateProgress * 0.95);
-        }
+        for (const f of gateFlaps) f.mesh.scale.x = Math.max(0.05, 1 - gateProgress * 0.95);
       }
 
       if (Math.abs(trainZ - stationData.z) < 160) {

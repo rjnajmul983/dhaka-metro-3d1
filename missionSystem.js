@@ -29,7 +29,7 @@ export class MissionSystem {
     if (!this.hasTicket) {
       this.hasTicket = true;
       this.score += 50;
-      this.onToast(`🎫 ${typeName} সংগ্রহ করেছেন! (+50 স্কোর) এবার AFC গেট স্ক্যান করুন।`);
+      this.onToast(`🎫 ${typeName} সংগ্রহ করেছেন! (+50) এবার AFC গেট স্ক্যান করুন।`);
     }
   }
 
@@ -37,7 +37,7 @@ export class MissionSystem {
     if (!this.gatePassed) {
       this.gatePassed = true;
       this.score += 50;
-      this.onToast('✅ AFC গেট খুলেছে! (+50 স্কোর) প্ল্যাটফর্মে গিয়ে ট্রেনের ক্যাবে উঠুন।');
+      this.onToast('✅ AFC গেট খুলেছে! (+50) প্ল্যাটফর্মে গিয়ে ট্রেনের ক্যাবে উঠুন।');
     }
   }
 
@@ -57,8 +57,8 @@ export class MissionSystem {
   }
 
   getObjectiveText() {
-    if (!this.hasTicket) return 'টিকিট কাউন্টার (TVM)-এর কাছে গিয়ে টিকিট কাটুন';
-    if (!this.gatePassed) return 'স্মার্ট AFC গেটের কাছে গিয়ে কার্ড/টিকিট স্ক্যান করুন';
+    if (!this.hasTicket) return 'টিকিট কাউন্টার (TVM) থেকে টিকিট কাটুন';
+    if (!this.gatePassed) return 'স্মার্ট AFC গেটে কার্ড/টিকিট স্ক্যান করুন';
     if (!this.boardedCab) return 'ট্রেনের সামনের ড্রাইভার ক্যাবে গিয়ে উঠুন';
     const next = this.getNextStation();
     return `${next.nameBn} স্টেশনে থামুন ও দরজা খুলুন`;
@@ -68,7 +68,7 @@ export class MissionSystem {
     if (!this.boardedCab) {
       this.boardedCab = true;
       this.score += 100;
-      this.onToast('🚆 ক্যাবে উঠেছেন! (+100 স্কোর) যাত্রা শুরু করুন।');
+      this.onToast('🚆 ক্যাবে উঠেছেন! (+100) যাত্রা শুরু করুন।');
       const next = this.getNextStation();
       this.announcementSys.announce(`ঢাকা মেট্রো রেলে স্বাগতম। পরবর্তী স্টেশন, ${next.nameBn}।`);
     }
