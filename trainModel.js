@@ -180,6 +180,12 @@ export function createDhakaMetroTrain(isAI = false) {
     mesh: trainGroup,
     setDoorsOpen(open) { doorsOpen = open; },
     isDoorsOpen() { return doorsOpen; },
+    applySkin(skin) {
+      if (!skin) return;
+      bodyMat.color.setHex(skin.body);
+      greenStripeMat.color.setHex(skin.stripe1);
+      redStripeMat.color.setHex(skin.stripe2);
+    },
     setNightMode(isNight) {
       glassMat.emissiveIntensity = isNight ? 0.55 : 0.0;
       if (spotLight) spotLight.intensity = isNight ? 90 : 20;
