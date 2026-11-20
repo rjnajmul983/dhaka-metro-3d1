@@ -9,7 +9,6 @@ import { WeatherSystem } from './systems/weatherSystem.js';
 import { AnnouncementSystem } from './systems/announcementSystem.js';
 import { MissionSystem } from './systems/missionSystem.js';
 
-// Hide Splash Screen smoothly
 setTimeout(() => {
   const sp = document.getElementById('splash-screen');
   if (sp) {
@@ -22,17 +21,33 @@ if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
   navigator.serviceWorker.register('./sw.js').catch(() => {});
 }
 
-// Core Three.js
+// Core Three.js with Cinematic ACES Filmic Tone Mapping (v11)
 const container = document.getElementById('game-container');
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 820);
+const camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 860);
 const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.08;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
 container.appendChild(renderer.domElement);
 
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.72);
+// Procedural Environment Reflection Map for Metallic Train & Glass (v11)
+const pmrem = new THREE.PMREMGenerator(renderer);
+const envScene = new THREE.Scene();
+envScene.add(new THREE.HemisphereLight(0x7dd3fc, 0x334155, 2.2));
+const envBox = new THREE.Mesh(
+  new THREE.SphereGeometry(20, 12, 8),
+  new THREE.MeshBasicMaterial({ color: 0x93c5fd, side: THREE.BackSide })
+);
+envScene.add(envBox);
+scene.environment = pmrem.fromScene(envScene, 0.04).texture;
+pmrem.dispose();
+
+// Natural Hemisphere + Directional Lighting (v11)
+const ambientLight = new THREE.HemisphereLight(0xbae6fd, 0x334155, 0.78);
 scene.add(ambientLight);
-const sunLight = new THREE.DirectionalLight(0xfffbeb, 1.6);
+const sunLight = new THREE.DirectionalLight(0xfffbeb, 1.65);
 sunLight.position.set(60, 120, 40);
 scene.add(sunLight);
 
@@ -60,7 +75,7 @@ const audio = new AudioEngine();
 const weather = new WeatherSystem(scene, sunLight, ambientLight, audio);
 const announcement = new AnnouncementSystem(audio);
 
-// Persistent Career Profile (v8)
+// Career Profile
 const career = Object.assign(
   { money: 250, xp: 0, unlockedSkins: ['classic'], activeSkin: 'classic' },
   JSON.parse(localStorage.getItem('dhaka_metro_career_v10') || '{}')
@@ -115,6 +130,7 @@ function applyWeatherState(wState) {
   document.getElementById('hud-weather-badge').textContent = wState.label;
   isSlippery = !!wState.slippery;
   city.setNightMode(wState.isNight);
+  city.setRainMode(wState.isRain);
   train.setNightMode(wState.isNight);
   aiTrain.setNightMode(wState.isNight);
   audio.setRainActive(wState.isRain);
@@ -153,7 +169,7 @@ const btnBoardMobile = document.getElementById('btn-board-mobile');
 let selectedMission = MISSIONS[0];
 let startStationObj = stationObjs[0];
 let gameState = 'menu';
-let cameraMode = 0; // 0 = 3rd person, 1 = 3D cab, 2 = Drone Orbit (v9)
+let cameraMode = 0;
 let slowMo = false;
 
 let speedKmh = 0;
@@ -238,7 +254,6 @@ const missionSys = new MissionSystem(showToast, (result) => {
   document.getElementById('mc-stops').textContent = result.stops;
 }, announcement);
 
-// Render Mission Cards
 MISSIONS.forEach((m, idx) => {
   const card = document.createElement('div');
   card.className = 'mission-card' + (idx === 0 ? ' active' : '');
@@ -251,7 +266,6 @@ MISSIONS.forEach((m, idx) => {
   elMissionList.appendChild(card);
 });
 
-// Render Garage Skins
 function renderGarage() {
   const list = document.getElementById('skin-list');
   list.innerHTML = '';
@@ -271,15 +285,13 @@ function renderGarage() {
     card.onclick = () => {
       if (owned) {
         career.activeSkin = sk.id;
-        saveCareer();
-        renderGarage();
+        saveCareer(); renderGarage();
         showToast(`🎨 ${sk.name} সেট করা হয়েছে!`);
       } else if (career.money >= sk.price) {
         career.money -= sk.price;
         career.unlockedSkins.push(sk.id);
         career.activeSkin = sk.id;
-        saveCareer();
-        renderGarage();
+        saveCareer(); renderGarage();
         audio.playGateSuccess();
         showToast(`🎉 ${sk.name} আনলক হয়েছে!`);
       } else {
@@ -384,7 +396,6 @@ function toggleDoors() {
   pill.className = 'pill ' + (nextState ? 'open' : 'closed');
 }
 
-// Modals & Buttons
 btnTicketInteract.onclick = () => elTicketModal.classList.remove('hidden');
 document.getElementById('btn-close-ticket').onclick = () => elTicketModal.classList.add('hidden');
 document.getElementById('btn-buy-single').onclick = () => buyTicket('সিঙ্গেল টিকিট');
@@ -394,22 +405,14 @@ btnGateInteract.onclick = scanAfcGate;
 document.getElementById('btn-open-garage').onclick = () => { renderGarage(); elGarageModal.classList.remove('hidden'); };
 document.getElementById('btn-close-garage').onclick = () => elGarageModal.classList.add('hidden');
 
-// Creator / Video Maker Mode (v9)
-document.getElementById('btn-creator').onclick = () => {
-  elHud.classList.add('hidden');
-  elRestoreHud.classList.remove('hidden');
-};
-elRestoreHud.onclick = () => {
-  elRestoreHud.classList.add('hidden');
-  elHud.classList.remove('hidden');
-};
+document.getElementById('btn-creator').onclick = () => { elHud.classList.add('hidden'); elRestoreHud.classList.remove('hidden'); };
+elRestoreHud.onclick = () => { elRestoreHud.classList.add('hidden'); elHud.classList.remove('hidden'); };
 document.getElementById('btn-slowmo').onclick = (e) => {
   slowMo = !slowMo;
   e.currentTarget.classList.toggle('active', slowMo);
   showToast(slowMo ? '⏱️ স্লো-মোশন চালু (0.5x)' : '⏱️ নরমাল স্পিড');
 };
 
-// Settings UI Wiring
 const volInput = document.getElementById('setting-volume');
 const volLabel = document.getElementById('vol-label');
 const sensInput = document.getElementById('setting-sens');
@@ -575,7 +578,6 @@ function animate() {
       brake = Math.max(0, brake - dt * 3.0);
     }
 
-    // Rain makes tracks slippery (30% less braking grip)
     const grip = isSlippery ? 0.7 : 1.0;
     const accel = throttle * TRAIN_PHYSICS.accelRate;
     const decel = ((keys['Space'] ? TRAIN_PHYSICS.emergencyBrake : brake * TRAIN_PHYSICS.brakeRate) * grip) + TRAIN_PHYSICS.drag;
@@ -606,7 +608,6 @@ function animate() {
       camera.position.set(0, 3.25, tz - 10.15);
       camera.lookAt(Math.sin(camOrbit.yaw) * 20, 2.85 - camOrbit.pitch * 12, tz - 50);
     } else {
-      // Drone Cinematic Auto-Orbit Camera (v9)
       const t = clock.getElapsedTime() * 0.35;
       camera.position.lerp(new THREE.Vector3(Math.sin(t) * 28, 16, tz + Math.cos(t) * 28), 0.08);
       camera.lookAt(0, 3, tz - 10);

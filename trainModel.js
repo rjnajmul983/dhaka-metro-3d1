@@ -11,26 +11,45 @@ function createDestinationTex(text) {
   ctx.font = 'bold 28px monospace';
   ctx.textAlign = 'center';
   ctx.fillText(text, 128, 42);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function createHeadlightHalo() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  const g = ctx.createRadialGradient(32, 32, 2, 32, 32, 30);
+  g.addColorStop(0, 'rgba(255,251,235,0.95)');
+  g.addColorStop(0.4, 'rgba(254,240,138,0.4)');
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 64, 64);
   return new THREE.CanvasTexture(canvas);
 }
+
+const sharedHaloTex = createHeadlightHalo();
 
 export function createDhakaMetroTrain(isAI = false) {
   const trainGroup = new THREE.Group();
   const doors = [];
 
-  const bodyMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.45, roughness: 0.3 });
-  const greenStripeMat = new THREE.MeshStandardMaterial({ color: 0x006a4e, metalness: 0.2, roughness: 0.4 });
-  const redStripeMat = new THREE.MeshStandardMaterial({ color: 0xf42a41, metalness: 0.2, roughness: 0.4 });
-  const darkMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.3, roughness: 0.6 });
+  const bodyMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.62, roughness: 0.22, envMapIntensity: 1.2 });
+  const greenStripeMat = new THREE.MeshStandardMaterial({ color: 0x006a4e, metalness: 0.25, roughness: 0.35 });
+  const redStripeMat = new THREE.MeshStandardMaterial({ color: 0xf42a41, metalness: 0.25, roughness: 0.35 });
+  const darkMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.35, roughness: 0.55 });
   const glassMat = new THREE.MeshStandardMaterial({
     color: 0x0f172a,
-    metalness: 0.85,
-    roughness: 0.12,
+    metalness: 0.92,
+    roughness: 0.08,
+    envMapIntensity: 1.6,
     emissive: 0xfef08a,
     emissiveIntensity: 0.0
   });
-  const headlightMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfffbeb, emissiveIntensity: 2.5 });
-  const taillightMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xef4444, emissiveIntensity: 2.0 });
+  const headlightMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfffbeb, emissiveIntensity: 2.8 });
+  const taillightMat = new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xef4444, emissiveIntensity: 2.2 });
 
   const carCount = 6;
   const carLength = 19;
@@ -41,6 +60,7 @@ export function createDhakaMetroTrain(isAI = false) {
   let throttleLever = null;
   let wiperPivot = null;
   let spotLight = null;
+  const hlHalos = [];
 
   for (let i = 0; i < carCount; i++) {
     const car = new THREE.Group();
@@ -119,10 +139,15 @@ export function createDhakaMetroTrain(isAI = false) {
       windshield.rotation.x = -0.22;
       car.add(windshield);
 
+      const haloMat = new THREE.SpriteMaterial({ map: sharedHaloTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0.3 });
       [-0.95, 0.95].forEach((hx) => {
         const hl = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.22, 0.15), headlightMat);
         hl.position.set(hx, -0.65, -carLength / 2 - 1.58);
-        car.add(hl);
+        const halo = new THREE.Sprite(haloMat);
+        halo.position.set(hx, -0.65, -carLength / 2 - 1.72);
+        halo.scale.set(2.4, 2.4, 1);
+        car.add(hl, halo);
+        hlHalos.push(haloMat);
       });
 
       if (!isAI) {
@@ -148,7 +173,7 @@ export function createDhakaMetroTrain(isAI = false) {
         wiperPivot.add(blade);
         car.add(wiperPivot);
 
-        spotLight = new THREE.SpotLight(0xfffbeb, 65, 140, Math.PI / 5, 0.4);
+        spotLight = new THREE.SpotLight(0xfffbeb, 65, 150, Math.PI / 5, 0.4);
         spotLight.position.set(0, 0.5, -carLength / 2 - 1.65);
         spotLight.target.position.set(0, -1, -carLength / 2 - 45);
         car.add(spotLight, spotLight.target);
@@ -187,8 +212,9 @@ export function createDhakaMetroTrain(isAI = false) {
       redStripeMat.color.setHex(skin.stripe2);
     },
     setNightMode(isNight) {
-      glassMat.emissiveIntensity = isNight ? 0.55 : 0.0;
-      if (spotLight) spotLight.intensity = isNight ? 90 : 20;
+      glassMat.emissiveIntensity = isNight ? 0.6 : 0.0;
+      if (spotLight) spotLight.intensity = isNight ? 95 : 22;
+      for (const m of hlHalos) m.opacity = isNight ? 0.85 : 0.25;
     },
     update(dt, throttleVal = 0, isRaining = false) {
       const target = doorsOpen ? 1 : 0;

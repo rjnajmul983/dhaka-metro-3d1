@@ -17,7 +17,9 @@ function createSignTexture(titleBn, titleEn) {
   ctx.fillStyle = '#e2e8f0';
   ctx.font = '600 24px sans-serif';
   ctx.fillText(titleEn.toUpperCase(), 256, 96);
-  return new THREE.CanvasTexture(canvas);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
 }
 
 function createStopMarkerTex() {
@@ -35,7 +37,9 @@ function createStopMarkerTex() {
   ctx.fillText('STOP', 64, 62);
   ctx.font = 'bold 26px sans-serif';
   ctx.fillText('থামুন', 64, 98);
-  return new THREE.CanvasTexture(canvas);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
 }
 
 function createTvmTex() {
@@ -54,27 +58,54 @@ function createTvmTex() {
   ctx.fillText('টিকিট', 64, 102);
   ctx.fillStyle = '#facc15';
   ctx.fillRect(28, 146, 72, 22);
-  return new THREE.CanvasTexture(canvas);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function createCountdownTex() {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 96;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#09090b';
+  ctx.fillRect(0, 0, 256, 96);
+  ctx.strokeStyle = '#006a4e';
+  ctx.lineWidth = 6;
+  ctx.strokeRect(3, 3, 250, 90);
+  ctx.fillStyle = '#4ade80';
+  ctx.font = 'bold 22px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('পরবর্তী ট্রেন: মতিঝিল', 128, 40);
+  ctx.fillStyle = '#facc15';
+  ctx.font = 'bold 24px monospace';
+  ctx.fillText('ARRIVING • 02 MIN', 128, 74);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
 }
 
 const sharedStopTex = createStopMarkerTex();
 const sharedTvmTex = createTvmTex();
+const sharedCountdownTex = createCountdownTex();
 
 export function createStation(stationData) {
   const group = new THREE.Group();
   group.position.set(0, 0, stationData.z);
 
-  const concreteMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.85 });
-  const darkRoofMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.3, roughness: 0.5 });
+  const concreteMat = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.82 });
+  const darkRoofMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.35, roughness: 0.45 });
   const yellowLineMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.5 });
-  const benchMat = new THREE.MeshStandardMaterial({ color: 0x0f766e, metalness: 0.4, roughness: 0.5 });
+  const benchMat = new THREE.MeshStandardMaterial({ color: 0x0f766e, metalness: 0.45, roughness: 0.45 });
   const lightStripMat = new THREE.MeshBasicMaterial({ color: 0xfef9c3 });
+  const potMat = new THREE.MeshStandardMaterial({ color: 0x9a3412, roughness: 0.8 });
+  const leafMat = new THREE.MeshStandardMaterial({ color: 0x16a34a, roughness: 0.7 });
   const glassMat = new THREE.MeshStandardMaterial({
     color: 0x38bdf8,
     transparent: true,
-    opacity: 0.38,
-    metalness: 0.2,
-    roughness: 0.1
+    opacity: 0.36,
+    metalness: 0.35,
+    roughness: 0.08
   });
 
   const length = 148;
@@ -96,7 +127,7 @@ export function createStation(stationData) {
   group.add(tvmMesh);
 
   // 3D AFC Smart Gates
-  const afcMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.5, roughness: 0.4 });
+  const afcMat = new THREE.MeshStandardMaterial({ color: 0x334155, metalness: 0.55, roughness: 0.35 });
   const gateLedMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
   const flapMat = new THREE.MeshStandardMaterial({ color: 0xf42a41, transparent: true, opacity: 0.75 });
   const gateFlaps = [];
@@ -129,12 +160,25 @@ export function createStation(stationData) {
     psdPanels.push({ mesh: slideDoor, baseZ: z + 5 });
   }
 
-  // STOP Marker
+  // STOP Marker & Hanging Digital Next-Train Countdown Display
   const stopBoard = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.9, 0.9), new THREE.MeshBasicMaterial({ map: sharedStopTex }));
   stopBoard.position.set(2.1, 3.2, -11);
   group.add(stopBoard);
 
-  // Canopy & Lights
+  const countMat = new THREE.MeshBasicMaterial({ map: sharedCountdownTex });
+  [10, 62].forEach((cz) => {
+    const board = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.95, 0.18), countMat);
+    board.position.set(4.6, 5.4, cz);
+    group.add(board);
+  });
+
+  // Escalator Visual Housing at far end of platform
+  const esc = new THREE.Mesh(new THREE.BoxGeometry(2.2, 3.2, 7.5), afcMat);
+  esc.position.set(6.5, 0.6, 108);
+  esc.rotation.x = 0.35;
+  group.add(esc);
+
+  // Canopy, Lights, Benches & Potted Indoor Plants
   const roof = new THREE.Mesh(new THREE.BoxGeometry(16, 0.6, length + 6), darkRoofMat);
   roof.position.set(3.2, 7.6, 45);
   group.add(roof);
@@ -146,10 +190,18 @@ export function createStation(stationData) {
     const led = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.12, 6), lightStripMat);
     led.position.set(4.8, 7.25, z);
     group.add(led);
+
     if (z > -10) {
       const bench = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.55, 3.6), benchMat);
       bench.position.set(6.8, 1.68, z + 6);
       group.add(bench);
+
+      // Potted Indoor Plant next to column
+      const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.24, 0.55, 8), potMat);
+      pot.position.set(7.1, 1.68, z + 1.8);
+      const bush = new THREE.Mesh(new THREE.DodecahedronGeometry(0.5, 0), leafMat);
+      bush.position.set(7.1, 2.25, z + 1.8);
+      group.add(pot, bush);
     }
   }
 
