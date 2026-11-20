@@ -8,17 +8,27 @@
   <meta name="theme-color" content="#006a4e" />
   <link rel="manifest" href="manifest.json" />
   <link rel="icon" type="image/svg+xml" href="icon.svg" />
-  <title>Dhaka Metro 3D v4 — MRT Line-6</title>
+  <title>Dhaka Metro 3D v10 — Ultimate</title>
   <link rel="stylesheet" href="css/style.css" />
   <script type="importmap">
     {
       "imports": {
-        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+        "three": "./js/three.module.js"
       }
     }
   </script>
 </head>
 <body>
+  <!-- Animated Splash Screen (v10) -->
+  <div id="splash-screen">
+    <div class="splash-inner">
+      <div class="splash-logo">🚆</div>
+      <h1>ঢাকা মেট্রো <span>3D</span></h1>
+      <p>MRT LINE-6 • ULTIMATE EDITION</p>
+      <div class="splash-bar"><div class="splash-fill"></div></div>
+    </div>
+  </div>
+
   <div id="game-container"></div>
 
   <!-- Portrait Orientation Warning -->
@@ -35,20 +45,35 @@
   <div id="main-menu" class="overlay">
     <div class="menu-landscape-card">
       <div class="menu-left">
-        <div class="badge">MRT LINE-6 • V4 PRO</div>
+        <div class="badge">MRT LINE-6 • V10 ULTIMATE</div>
         <h1>ঢাকা মেট্রো <span>3D</span></h1>
-        <p class="subtitle">টিকিট কাউন্টার, স্মার্ট AFC গেট, বাংলা অডিও অ্যানাউন্সমেন্ট ও ১৬টি স্টেশন</p>
+        <div class="career-strip">
+          <span id="menu-rank">🎖️ ট্রেইনি অপারেটর</span>
+          <span id="menu-money">💰 ৳ 0</span>
+        </div>
+        <p class="subtitle">১৬টি স্টেশন, ঢাকার ল্যান্ডমার্ক, ক্যারিয়ার মোড, ড্রোন ক্যামেরা ও অফলাইন APK</p>
         <div class="menu-actions">
           <button id="btn-start" class="btn-primary">▶ গেম শুরু করুন</button>
-          <button id="btn-open-settings-menu" class="btn-secondary">⚙️ সেটিংস</button>
+          <button id="btn-open-garage" class="btn-secondary">🎨 ট্রেন স্কিন</button>
+          <button id="btn-open-settings-menu" class="btn-secondary">⚙️</button>
         </div>
-        <div class="tip-line">💡 টিপস: প্রথমে টিকিট কাউন্টার থেকে টিকিট কেটে গেট স্ক্যান করে প্ল্যাটফর্মে ঢুকুন</div>
       </div>
 
       <div class="menu-right">
         <h3>মিশন নির্বাচন করুন</h3>
         <div class="mission-list" id="mission-list"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- Train Skins / Garage Modal (v8) -->
+  <div id="garage-modal" class="overlay hidden">
+    <div class="settings-card">
+      <div class="settings-header">
+        <h2>🎨 ট্রেন লিভারি ও স্কিন (<span id="garage-money">৳ 0</span>)</h2>
+        <button id="btn-close-garage" class="icon-btn small">✕</button>
+      </div>
+      <div class="skin-grid" id="skin-list"></div>
     </div>
   </div>
 
@@ -83,7 +108,7 @@
 
       <div class="settings-grid">
         <div class="setting-item">
-          <label>গ্রাফিক্স কোয়ালিটি (FPS অপ্টিমাইজেশন)</label>
+          <label>গ্রাফিক্স কোয়ালিটি</label>
           <div class="segmented" id="graphics-selector">
             <button data-quality="low">Low</button>
             <button data-quality="medium" class="active">Medium</button>
@@ -97,13 +122,18 @@
         </div>
 
         <div class="setting-item">
-          <label>ক্যামেরা সোয়াইপ সেন্সিটিভিটি (<span id="sens-label">1.0x</span>)</label>
+          <label>ক্যামেরা সেন্সিটিভিটি (<span id="sens-label">1.0x</span>)</label>
           <input type="range" id="setting-sens" min="5" max="20" value="10" />
         </div>
 
         <div class="setting-item row-between">
-          <label>স্টেশন বাংলা ভয়েস অ্যানাউন্সমেন্ট</label>
+          <label>বাংলা ভয়েস অ্যানাউন্সমেন্ট</label>
           <input type="checkbox" id="setting-announce" class="toggle-switch" checked />
+        </div>
+
+        <div class="setting-item row-between">
+          <label>হ্যাপটিক ভাইব্রেশন</label>
+          <input type="checkbox" id="setting-vibrate" class="toggle-switch" checked />
         </div>
 
         <div class="setting-item row-between">
@@ -112,7 +142,7 @@
         </div>
 
         <div class="setting-item row-between">
-          <label>FPS কাউন্টার দেখান</label>
+          <label>FPS কাউন্টার</label>
           <input type="checkbox" id="setting-fps" class="toggle-switch" />
         </div>
 
@@ -124,6 +154,9 @@
     </div>
   </div>
 
+  <!-- Creator Mode Restore HUD Button (v9) -->
+  <button id="btn-restore-hud" class="restore-hud-btn hidden">👁️ HUD দেখান</button>
+
   <!-- In-Game HUD -->
   <div id="hud" class="hidden">
     <div class="hud-top">
@@ -133,7 +166,7 @@
       </div>
 
       <div class="panel mission-panel">
-        <div id="hud-objective">টিকিট কাউন্টার (TVM) থেকে টিকিট সংগ্রহ করুন</div>
+        <div id="hud-objective">টিকিট কাউন্টার (TVM) থেকে টিকিট কাটুন</div>
         <div class="route-bar-wrap">
           <div class="route-track">
             <div id="route-fill" class="route-fill"></div>
@@ -151,6 +184,8 @@
       <div class="top-actions">
         <button id="btn-weather" class="icon-btn" title="আবহাওয়া">🌤️</button>
         <button id="btn-camera" class="icon-btn" title="ক্যামেরা">🎥</button>
+        <button id="btn-creator" class="icon-btn" title="ক্রিয়েটর/রেকর্ড মোড (HUD হাইড)">🎬</button>
+        <button id="btn-slowmo" class="icon-btn" title="স্লো-মোশন">⏱️</button>
         <button id="btn-settings-hud" class="icon-btn" title="সেটিংস">⚙️</button>
         <button id="btn-menu" class="icon-btn" title="মেনু">☰</button>
       </div>
@@ -162,10 +197,7 @@
       <span id="pa-text"></span>
     </div>
 
-    <!-- Speeding Alert -->
     <div id="speed-warning" class="speed-warning hidden">⚠️ ওভারস্পিড! গতি কমান</div>
-
-    <!-- Toast Notification -->
     <div id="toast" class="toast hidden"></div>
 
     <!-- WALKING MODE MOBILE CONTROLS -->
@@ -180,18 +212,9 @@
       </div>
 
       <div class="right-zone walk-actions">
-        <button id="btn-ticket-interact" class="action-fab amber hidden">
-          <span>🎫</span>
-          <small>টিকিট কাটুন</small>
-        </button>
-        <button id="btn-gate-interact" class="action-fab blue hidden">
-          <span>💳</span>
-          <small>গেট স্ক্যান</small>
-        </button>
-        <button id="btn-board-mobile" class="action-fab green hidden">
-          <span>🚆</span>
-          <small>ক্যাবে উঠুন</small>
-        </button>
+        <button id="btn-ticket-interact" class="action-fab amber hidden"><span>🎫</span><small>টিকিট কাটুন</small></button>
+        <button id="btn-gate-interact" class="action-fab blue hidden"><span>💳</span><small>গেট স্ক্যান</small></button>
+        <button id="btn-board-mobile" class="action-fab green hidden"><span>🚆</span><small>ক্যাবে উঠুন</small></button>
       </div>
     </div>
 
@@ -237,8 +260,9 @@
       <h2>মিশন সম্পন্ন হয়েছে! 🎉</h2>
       <p id="mc-summary" class="subtitle"></p>
       <div class="mc-stats">
-        <div>মোট স্কোর: <b id="mc-score">0</b></div>
-        <div>সঠিক স্টপেজ: <b id="mc-stops">0</b></div>
+        <div>স্কোর: <b id="mc-score">0</b></div>
+        <div>আয়: <b id="mc-reward">৳ 0</b></div>
+        <div>স্টপেজ: <b id="mc-stops">0</b></div>
       </div>
       <button id="btn-next-mission" class="btn-primary">মেনুতে ফিরে যান</button>
     </div>

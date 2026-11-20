@@ -10,25 +10,18 @@ export class AnnouncementSystem {
 
   setEnabled(enabled) {
     this.enabled = enabled;
-    if (!enabled && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
+    if (!enabled && window.speechSynthesis) window.speechSynthesis.cancel();
   }
 
-  reset() {
-    this.lastApproachedId = -1;
-  }
+  reset() { this.lastApproachedId = -1; }
 
   announce(textBn) {
     if (!this.enabled) return;
-
     this.audio.playPAChime();
     this.elText.textContent = textBn;
     this.elBanner.classList.remove('hidden');
     clearTimeout(this.hideTimer);
-    this.hideTimer = setTimeout(() => {
-      this.elBanner.classList.add('hidden');
-    }, 5200);
+    this.hideTimer = setTimeout(() => this.elBanner.classList.add('hidden'), 5200);
 
     if ('speechSynthesis' in window && !this.audio.muted) {
       try {
@@ -37,11 +30,9 @@ export class AnnouncementSystem {
         utter.lang = 'bn-BD';
         utter.rate = 0.96;
         utter.volume = this.audio.volume;
-
         const voices = window.speechSynthesis.getVoices();
         const bnVoice = voices.find((v) => v.lang && v.lang.toLowerCase().startsWith('bn'));
         if (bnVoice) utter.voice = bnVoice;
-
         setTimeout(() => window.speechSynthesis.speak(utter), 320);
       } catch (_) {}
     }

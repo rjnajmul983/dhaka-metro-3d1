@@ -5,6 +5,8 @@ export class AudioEngine {
     this.motorOsc = null;
     this.motorGain = null;
     this.rainGain = null;
+    this.screechOsc = null;
+    this.screechGain = null;
     this.isInit = false;
     this.volume = 0.8;
     this.muted = false;
@@ -22,21 +24,31 @@ export class AudioEngine {
     this.masterGain.gain.value = this.muted ? 0 : this.volume;
     this.masterGain.connect(this.ctx.destination);
 
+    // Electric traction motor
     this.motorOsc = this.ctx.createOscillator();
     this.motorGain = this.ctx.createGain();
     this.motorOsc.type = 'sawtooth';
     this.motorOsc.frequency.value = 55;
-
     const filter = this.ctx.createBiquadFilter();
     filter.type = 'lowpass';
     filter.frequency.value = 280;
-
     this.motorGain.gain.value = 0.0;
     this.motorOsc.connect(filter);
     filter.connect(this.motorGain);
     this.motorGain.connect(this.masterGain);
     this.motorOsc.start();
 
+    // Brake Screech
+    this.screechOsc = this.ctx.createOscillator();
+    this.screechGain = this.ctx.createGain();
+    this.screechOsc.type = 'triangle';
+    this.screechOsc.frequency.value = 1850;
+    this.screechGain.gain.value = 0.0;
+    this.screechOsc.connect(this.screechGain);
+    this.screechGain.connect(this.masterGain);
+    this.screechOsc.start();
+
+    // Procedural Rain Noise Loop
     const bufferSize = this.ctx.sampleRate * 2;
     const noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
     const data = noiseBuffer.getChannelData(0);
@@ -45,15 +57,12 @@ export class AudioEngine {
     const rainSrc = this.ctx.createBufferSource();
     rainSrc.buffer = noiseBuffer;
     rainSrc.loop = true;
-
     const rainFilter = this.ctx.createBiquadFilter();
     rainFilter.type = 'bandpass';
     rainFilter.frequency.value = 1100;
     rainFilter.Q.value = 0.6;
-
     this.rainGain = this.ctx.createGain();
     this.rainGain.gain.value = 0.0;
-
     rainSrc.connect(rainFilter);
     rainFilter.connect(this.rainGain);
     this.rainGain.connect(this.masterGain);
@@ -81,16 +90,40 @@ export class AudioEngine {
     this.rainGain.gain.setTargetAtTime(active ? 0.09 : 0.0, this.ctx.currentTime, 0.3);
   }
 
-  updateMotor(speedKmh, isDriving, dt, isOverspeed) {
+  playThunder() {
+    if (!this.isInit || !this.ctx || this.muted) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(65, now);
+    osc.frequency.exponentialRampToValueAtTime(22, now + 1.4);
+    const lp = this.ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = 140;
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.exponentialRampToValueAtTime(0.28, now + 0.08);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.6);
+    osc.connect(lp);
+    lp.connect(gain);
+    gain.connect(this.masterGain);
+    osc.start(now);
+    osc.stop(now + 1.7);
+  }
+
+  updateMotor(speedKmh, isDriving, dt, isOverspeed, brakeVal = 0) {
     if (!this.isInit || !this.ctx) return;
     if (this.ctx.state === 'suspended') this.ctx.resume();
 
     const norm = Math.min(speedKmh / 100, 1);
     const targetFreq = 48 + norm * 250;
     const targetGain = isDriving && speedKmh > 0.5 ? 0.028 + norm * 0.075 : 0.0;
-
     this.motorOsc.frequency.setTargetAtTime(targetFreq, this.ctx.currentTime, 0.1);
     this.motorGain.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.1);
+
+    // Brake Screech when braking at medium/low speed
+    const screech = isDriving && brakeVal > 0.5 && speedKmh > 4 && speedKmh < 55 ? 0.018 * brakeVal : 0.0;
+    this.screechGain.gain.setTargetAtTime(screech, this.ctx.currentTime, 0.08);
 
     if (isDriving && speedKmh > 8 && !this.muted) {
       this.clackTimer += dt * (speedKmh / 18);

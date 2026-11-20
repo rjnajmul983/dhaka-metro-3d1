@@ -20,40 +20,58 @@ export const STATIONS = [
 export const MISSIONS = [
   {
     id: 'm1',
-    title: 'মিশন ১: উত্তরা টু পল্লবী',
+    title: 'মিশন ১: দিয়াবাড়ি টু পল্লবী',
     desc: 'টিকিট কেটে গেট পার হয়ে উত্তরা উত্তর থেকে পল্লবী পর্যন্ত নিরাপদে ট্রেন চালান।',
     startStation: 0,
     targetStations: [1, 2, 3],
     weather: 'day',
-    speedLimit: 80
+    speedLimit: 80,
+    rewardTk: 500
   },
   {
     id: 'm2',
     title: 'মিশন ২: ফার্মগেট রাশ আওয়ার',
-    desc: 'সন্ধ্যার ঢাকায় মিরপুর ১০ থেকে আগারগাঁও, ফার্মগেট হয়ে শাহবাগ পর্যন্ত এক্সপ্রেস যাত্রা।',
+    desc: 'সন্ধ্যার ঢাকায় মিরপুর ১০ থেকে সংসদ ভবন ও ফার্মগেট হয়ে শাহবাগ এক্সপ্রেস।',
     startStation: 5,
     targetStations: [8, 10, 12],
     weather: 'sunset',
-    speedLimit: 90
+    speedLimit: 90,
+    rewardTk: 800
   },
   {
     id: 'm3',
-    title: 'মিশন ৩: বর্ষার রাতে মতিঝিল',
-    desc: 'বৃষ্টির রাতে ফার্মগেট থেকে ঢাকা বিশ্ববিদ্যালয় হয়ে মতিঝিল পর্যন্ত সতর্ক ড্রাইভিং।',
+    title: 'মিশন ৩: ঝড়-বৃষ্টির রাতে মতিঝিল',
+    desc: 'বজ্রপাত ও পিচ্ছিল লাইনে ফার্মগেট থেকে টিএসসি হয়ে মতিঝিল শাপলা চত্বর।',
     startStation: 10,
     targetStations: [12, 13, 15],
     weather: 'rain',
-    speedLimit: 70
+    speedLimit: 70,
+    rewardTk: 1200
   },
   {
     id: 'm4',
-    title: 'মিশন ৪: ফুল MRT-6 চ্যালেঞ্জ',
-    desc: 'উত্তরা উত্তর থেকে মতিঝিল! মূল স্টেশনগুলোতে থেমে সম্পূর্ণ ঢাকা অতিক্রম করুন।',
+    title: 'মিশন ৪: শীতের কুয়াশায় ফুল MRT-6',
+    desc: 'ঘন কুয়াশায় উত্তরা উত্তর থেকে মতিঝিল পর্যন্ত সম্পূর্ণ ঢাকা অতিক্রম করুন।',
     startStation: 0,
     targetStations: [3, 5, 8, 10, 13, 15],
-    weather: 'night',
-    speedLimit: 95
+    weather: 'fog',
+    speedLimit: 85,
+    rewardTk: 2000
   }
+];
+
+export const TRAIN_SKINS = [
+  { id: 'classic', name: 'ক্লাসিক MRT-6', price: 0, body: 0xe2e8f0, stripe1: 0x006a4e, stripe2: 0xf42a41 },
+  { id: 'victory', name: 'বিজয় দিবস স্পেশাল', price: 500, body: 0x064e3b, stripe1: 0xf42a41, stripe2: 0xfacc15 },
+  { id: 'ekushey', name: 'একুশে ফেব্রুয়ারি', price: 900, body: 0x18181b, stripe1: 0xf8fafc, stripe2: 0xdc2626 },
+  { id: 'golden', name: 'গোল্ডেন এক্সপ্রেস', price: 1500, body: 0xfef3c7, stripe1: 0xd97706, stripe2: 0x006a4e }
+];
+
+export const RANKS = [
+  { minXp: 0, title: 'ট্রেইনি অপারেটর' },
+  { minXp: 500, title: 'জুনিয়র পাইলট' },
+  { minXp: 1500, title: 'সিনিয়র অপারেটর' },
+  { minXp: 3500, title: 'চিফ কন্ট্রোলার' }
 ];
 
 export const TRAIN_PHYSICS = {
