@@ -1,0 +1,6 @@
+<resources>
+    <style name="Theme.DhakaMetro" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowBackground">#0b1320</item>
+    </style>
+</resources>

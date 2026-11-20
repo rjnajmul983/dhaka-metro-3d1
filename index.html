@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#006a4e" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
+  <title>Dhaka Metro 3D v4 — MRT Line-6</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="game-container"></div>
+
+  <!-- Portrait Orientation Warning -->
+  <div id="rotate-overlay">
+    <div class="rotate-box">
+      <div class="rotate-icon">📱↻</div>
+      <h2>ফোনটি ল্যান্ডস্কেপ (আড়াআড়ি) করুন</h2>
+      <p>সেরা ৩ডি গেমিং অভিজ্ঞতার জন্য ফোনটি আড়াআড়ি ধরুন।</p>
+      <button id="btn-force-landscape" class="btn-primary small">ফুলস্ক্রিন ল্যান্ডস্কেপ চালু করুন</button>
+    </div>
+  </div>
+
+  <!-- Main Menu Overlay -->
+  <div id="main-menu" class="overlay">
+    <div class="menu-landscape-card">
+      <div class="menu-left">
+        <div class="badge">MRT LINE-6 • V4 PRO</div>
+        <h1>ঢাকা মেট্রো <span>3D</span></h1>
+        <p class="subtitle">টিকিট কাউন্টার, স্মার্ট AFC গেট, বাংলা অডিও অ্যানাউন্সমেন্ট ও ১৬টি স্টেশন</p>
+        <div class="menu-actions">
+          <button id="btn-start" class="btn-primary">▶ গেম শুরু করুন</button>
+          <button id="btn-open-settings-menu" class="btn-secondary">⚙️ সেটিংস</button>
+        </div>
+        <div class="tip-line">💡 টিপস: প্রথমে টিকিট কাউন্টার থেকে টিকিট কেটে গেট স্ক্যান করে প্ল্যাটফর্মে ঢুকুন</div>
+      </div>
+
+      <div class="menu-right">
+        <h3>মিশন নির্বাচন করুন</h3>
+        <div class="mission-list" id="mission-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ticket Counter (TVM) Modal -->
+  <div id="ticket-modal" class="overlay hidden">
+    <div class="settings-card">
+      <div class="settings-header">
+        <h2>🎫 MRT টিকিট ভেন্ডিং মেশিন</h2>
+        <button id="btn-close-ticket" class="icon-btn small">✕</button>
+      </div>
+      <p class="ticket-sub">প্ল্যাটফর্মে প্রবেশের জন্য আপনার টিকিট বা MRT Pass সংগ্রহ করুন:</p>
+      <div class="ticket-options">
+        <button id="btn-buy-single" class="ticket-btn">
+          <div class="t-title">🎟️ সিঙ্গেল জার্নি টিকিট</div>
+          <div class="t-price">ভাড়া: ৳ ৫০</div>
+        </button>
+        <button id="btn-buy-mrtpass" class="ticket-btn highlight">
+          <div class="t-title">💳 MRT Pass (অপারেটর কার্ড)</div>
+          <div class="t-price">ডিসকাউন্ট + দ্রুত এন্ট্রি</div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Modal -->
+  <div id="settings-modal" class="overlay hidden">
+    <div class="settings-card">
+      <div class="settings-header">
+        <h2>⚙️ গেম সেটিংস</h2>
+        <button id="btn-close-settings" class="icon-btn small">✕</button>
+      </div>
+
+      <div class="settings-grid">
+        <div class="setting-item">
+          <label>গ্রাফিক্স কোয়ালিটি (FPS অপ্টিমাইজেশন)</label>
+          <div class="segmented" id="graphics-selector">
+            <button data-quality="low">Low</button>
+            <button data-quality="medium" class="active">Medium</button>
+            <button data-quality="high">High</button>
+          </div>
+        </div>
+
+        <div class="setting-item">
+          <label>সাউন্ড ভলিউম (<span id="vol-label">80%</span>)</label>
+          <input type="range" id="setting-volume" min="0" max="100" value="80" />
+        </div>
+
+        <div class="setting-item">
+          <label>ক্যামেরা সোয়াইপ সেন্সিটিভিটি (<span id="sens-label">1.0x</span>)</label>
+          <input type="range" id="setting-sens" min="5" max="20" value="10" />
+        </div>
+
+        <div class="setting-item row-between">
+          <label>স্টেশন বাংলা ভয়েস অ্যানাউন্সমেন্ট</label>
+          <input type="checkbox" id="setting-announce" class="toggle-switch" checked />
+        </div>
+
+        <div class="setting-item row-between">
+          <label>সাউন্ড মিউট</label>
+          <input type="checkbox" id="setting-mute" class="toggle-switch" />
+        </div>
+
+        <div class="setting-item row-between">
+          <label>FPS কাউন্টার দেখান</label>
+          <input type="checkbox" id="setting-fps" class="toggle-switch" />
+        </div>
+
+        <div class="setting-item row-between">
+          <label>ফুলস্ক্রিন ও ল্যান্ডস্কেপ লক</label>
+          <button id="btn-toggle-fullscreen" class="btn-secondary small">⛶ ফুলস্ক্রিন</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- In-Game HUD -->
+  <div id="hud" class="hidden">
+    <div class="hud-top">
+      <div class="panel station-panel">
+        <div class="station-name" id="hud-station">উত্তরা উত্তর</div>
+        <div class="station-dist" id="hud-dist">দূরত্ব: 0 m</div>
+      </div>
+
+      <div class="panel mission-panel">
+        <div id="hud-objective">টিকিট কাউন্টার (TVM) থেকে টিকিট সংগ্রহ করুন</div>
+        <div class="route-bar-wrap">
+          <div class="route-track">
+            <div id="route-fill" class="route-fill"></div>
+            <div id="route-train-dot" class="route-train-dot"></div>
+          </div>
+        </div>
+        <div class="score-row">
+          <span>স্কোর: <b id="hud-score">0</b></span>
+          <span id="hud-ticket-badge">🎫 টিকিট নেই</span>
+          <span id="hud-weather-badge">☀️ দিন</span>
+          <span id="hud-fps" class="fps-badge hidden">60 FPS</span>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button id="btn-weather" class="icon-btn" title="আবহাওয়া">🌤️</button>
+        <button id="btn-camera" class="icon-btn" title="ক্যামেরা">🎥</button>
+        <button id="btn-settings-hud" class="icon-btn" title="সেটিংস">⚙️</button>
+        <button id="btn-menu" class="icon-btn" title="মেনু">☰</button>
+      </div>
+    </div>
+
+    <!-- Live PA Announcement Ticker -->
+    <div id="pa-banner" class="pa-banner hidden">
+      <span class="pa-icon">📢</span>
+      <span id="pa-text"></span>
+    </div>
+
+    <!-- Speeding Alert -->
+    <div id="speed-warning" class="speed-warning hidden">⚠️ ওভারস্পিড! গতি কমান</div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- WALKING MODE MOBILE CONTROLS -->
+    <div id="walking-hud" class="mobile-controls">
+      <div class="left-zone">
+        <div id="joystick-zone" class="joystick-zone">
+          <div class="joystick-base">
+            <div id="joystick-knob" class="joystick-knob"></div>
+          </div>
+          <div class="joy-hint">হাঁটুন</div>
+        </div>
+      </div>
+
+      <div class="right-zone walk-actions">
+        <button id="btn-ticket-interact" class="action-fab amber hidden">
+          <span>🎫</span>
+          <small>টিকিট কাটুন</small>
+        </button>
+        <button id="btn-gate-interact" class="action-fab blue hidden">
+          <span>💳</span>
+          <small>গেট স্ক্যান</small>
+        </button>
+        <button id="btn-board-mobile" class="action-fab green hidden">
+          <span>🚆</span>
+          <small>ক্যাবে উঠুন</small>
+        </button>
+      </div>
+    </div>
+
+    <!-- DRIVING MODE MOBILE CONTROLS -->
+    <div id="driving-hud" class="mobile-controls hidden">
+      <div class="left-zone driving-left">
+        <div class="pedal-stack">
+          <button id="btn-accel" class="pedal-btn green">▲<br /><span>গতি</span></button>
+          <button id="btn-brake" class="pedal-btn amber">▼<br /><span>ব্রেক</span></button>
+          <button id="btn-ebrake" class="pedal-btn red">🛑<br /><span>ইমার্জেন্সি</span></button>
+        </div>
+        <div class="mini-bars">
+          <div class="v-bar"><div id="bar-throttle" class="v-fill green"></div></div>
+          <div class="v-bar"><div id="bar-brake" class="v-fill red"></div></div>
+        </div>
+      </div>
+
+      <div class="center-zone">
+        <div class="panel speed-cluster" id="speed-cluster">
+          <div class="speed-main">
+            <span id="hud-speed">0</span>
+            <small>km/h</small>
+          </div>
+          <div class="speed-meta">
+            <span class="limit-tag">সীমা <b id="hud-limit">80</b></span>
+            <span id="pill-doors" class="pill closed">দরজা বন্ধ</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="right-zone driving-right">
+        <button id="btn-doors" class="action-btn">🚪<span>দরজা</span></button>
+        <button id="btn-horn" class="action-btn">📯<span>হর্ন</span></button>
+        <button id="btn-exit" class="action-btn danger">🚶<span>নামুন</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mission Complete Modal -->
+  <div id="mission-complete" class="overlay hidden">
+    <div class="settings-card center-text">
+      <div class="badge">MISSION ACCOMPLISHED</div>
+      <h2>মিশন সম্পন্ন হয়েছে! 🎉</h2>
+      <p id="mc-summary" class="subtitle"></p>
+      <div class="mc-stats">
+        <div>মোট স্কোর: <b id="mc-score">0</b></div>
+        <div>সঠিক স্টপেজ: <b id="mc-stops">0</b></div>
+      </div>
+      <button id="btn-next-mission" class="btn-primary">মেনুতে ফিরে যান</button>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
